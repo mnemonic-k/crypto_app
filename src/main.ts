@@ -16,7 +16,7 @@ async function bootstrap() {
     .setTitle('Crypto pairs')
     .setDescription('API description')
     .setVersion('1.0')
-    .addTag('crypto')
+    .addTag('crypto_rates')
     .build();
   const document = SwaggerModule.createDocument(app, config);
 

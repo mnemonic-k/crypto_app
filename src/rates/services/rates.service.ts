@@ -31,7 +31,9 @@ export class RatesService {
       symbolB: data.symbolB,
     };
 
-    const rate = await this.cryptoRateModel.findOne(query);
+    const rate = await this.cryptoRateModel
+      .findOne(query)
+      .sort([['timestamp', -1]]);
 
     if (!rate) {
       throw new UnprocessableEntityException({

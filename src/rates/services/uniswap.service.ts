@@ -75,46 +75,40 @@ export class UniswapService {
 
     const [reserve0, reserve1] = await pairContract.getReserves();
 
-    const tokenO = await pairContract.token0();
-    const token1 = await pairContract.token1();
+    const addressTokenA = await pairContract.token0();
+    const addressTokenB = await pairContract.token1();
 
-    const decimals0 = await this.getTokenDecimals(tokenO);
-    const decimals1 = await this.getTokenDecimals(token1);
+    const decimals0 = await this.getTokenDecimals(addressTokenA);
+    const decimals1 = await this.getTokenDecimals(addressTokenB);
 
-    const firstTokenReserves = this.utils.convertBigIntToFloat(
-      reserve0,
-      decimals0,
-    );
-    const secondTokenReserves = this.utils.convertBigIntToFloat(
-      reserve1,
-      decimals1,
-    );
+    const reserveTokenA = this.utils.convertBigIntToFloat(reserve0, decimals0);
+    const reserveTokenB = this.utils.convertBigIntToFloat(reserve1, decimals1);
 
     return [
-      { tokenAdrress: tokenO, reserves: firstTokenReserves },
-      { tokenAdrress: token1, reserves: secondTokenReserves },
+      { tokenAdrress: addressTokenA, reserves: reserveTokenA },
+      { tokenAdrress: addressTokenB, reserves: reserveTokenB },
     ];
   }
 
   async getUniswapRate(
-    firstTokenAddress: string,
-    secondTokenAddress: string,
+    addressTokenA: string,
+    addressTokenB: string,
     factoryAddress: string,
   ): Promise<any> {
     const factoryContract = this.getFactoryContract(factoryAddress);
 
     const pairAddress = await factoryContract.getPair(
-      firstTokenAddress,
-      secondTokenAddress,
+      addressTokenA,
+      addressTokenB,
     );
 
     const [token0, token1] = await this.getTokensReserves(pairAddress);
 
     let price;
 
-    if (token0.tokenAdrress === firstTokenAddress) {
+    if (token0.tokenAdrress === addressTokenA) {
       price = token1.reserves / token0.reserves;
-    } else if (token0.tokenAdrress === secondTokenAddress) {
+    } else if (token0.tokenAdrress === addressTokenB) {
       price = token0.reserves / token1.reserves;
     }
 
