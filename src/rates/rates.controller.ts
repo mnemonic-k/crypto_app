@@ -5,6 +5,7 @@ import {
   HttpStatus,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { RatesService } from './services/rates.service';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -13,6 +14,7 @@ import { GetHistoryRatesDto } from './dto/getHistoryRates.dto';
 import { RatesDto } from './dto/rates.dto';
 import { GetRateDto } from './dto/getRate.dto';
 import { RateDto } from './dto/rate.dto';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 
 @ApiTags('crypto_rates')
 @Controller('rates')
@@ -34,6 +36,8 @@ export class RatesController {
     summary: 'Get history rates',
   })
   @HttpCode(HttpStatus.OK)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 1, ttl: 5000 } })
   @Get('history')
   async getHistoryRates(@Query() query: GetHistoryRatesDto): Promise<RatesDto> {
     return this.ratesService.getHistoryRates(query);
