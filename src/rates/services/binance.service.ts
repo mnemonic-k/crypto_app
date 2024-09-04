@@ -16,13 +16,8 @@ export class BinanceService {
 
   async getBinanceRate(symbolA: string, symbolB: string): Promise<any> {
     const binancePair = `${symbolA}${symbolB}`;
-    let res;
 
-    try {
-      res = await this.client.symbolPriceTicker({ symbol: binancePair });
-    } catch (err) {
-      console.log(binancePair, err);
-    }
+    const res = await this.client.symbolPriceTicker({ symbol: binancePair });
 
     return res;
   }

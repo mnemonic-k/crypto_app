@@ -67,6 +67,10 @@ export class RatesService {
     return new RatesDto(list);
   }
 
+  isRateCorrect(binanceRate: number, uniRate: number): boolean {
+    return Math.abs((binanceRate - uniRate) / binanceRate) <= 0.1;
+  }
+
   async collectRates(): Promise<void> {
     const factoryAddress = this.configService.get<string>(
       'UNISWAP_FACTORY_CONTRACT',
@@ -74,37 +78,49 @@ export class RatesService {
 
     const whitelist = await this.whiteListModel.find();
 
-    for (const pair of whitelist) {
-      const { symbol: binancePair, price: binanceRate } =
-        await this.binanceService.getBinanceRate(pair.symbolA, pair.symbolB);
+    const promises = whitelist.map(async (pair) => {
+      try {
+        const { symbol: binancePair, price: binanceRate } =
+          await this.binanceService.getBinanceRate(pair.symbolA, pair.symbolB);
 
-      const { pairAddress, price: uniRate } =
-        await this.uniswapService.getUniswapRate(
-          pair.addressA,
-          pair.addressB,
-          factoryAddress,
+        const { pairAddress, price: uniRate } =
+          await this.uniswapService.getUniswapRate(
+            pair.addressA,
+            pair.addressB,
+            factoryAddress,
+          );
+
+        const rate = {
+          symbolA: pair.symbolA,
+          symbolB: pair.symbolB,
+          binancePair,
+          pairAddressUni: pairAddress,
+          timestamp: Date.now(),
+          rate: binanceRate,
+          isCorrect: this.isRateCorrect(binanceRate, uniRate),
+        };
+
+        const cryptoRate = new this.cryptoRateModel(rate);
+        await cryptoRate.save();
+      } catch (err) {
+        console.error(
+          `Error processing ${pair.symbolA}${pair.symbolB}: ${err}`,
         );
+        throw new UnprocessableEntityException({
+          message: `Error processing ${pair.symbolA}${pair.symbolB}: ${err}`,
+          errorCode: 'PAIR_PROCESS_ERROR',
+          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        });
+      }
+    });
 
-      const rate = {
-        symbolA: pair.symbolA,
-        symbolB: pair.symbolB,
-        binancePair,
-        pairAddressUni: pairAddress,
-        timestamp: Date.now(),
-        rate: binanceRate,
-        isCorrect: Math.abs((binanceRate - uniRate) / binanceRate) <= 0.1,
-      };
-
-      const cryptoRate = new this.cryptoRateModel(rate);
-      await cryptoRate.save();
-    }
+    await Promise.allSettled(promises);
   }
 
   // async initWhiteList() {
   //   await this.whiteListModel.insertMany(whitelist);
   // }
 }
-
 // const whitelist = [
 //   {
 //     symbolA: 'BNB',
