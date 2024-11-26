@@ -1,16 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ethers } from 'ethers';
-import { Utils } from 'src/utils/utils';
 
 @Injectable()
 export class UniswapService {
   provider: ethers.JsonRpcProvider;
 
-  constructor(
-    private readonly utils: Utils,
-    private readonly configService: ConfigService,
-  ) {
+  constructor(private readonly configService: ConfigService) {
     const BSC_RPC = this.configService.get<string>('BSC_RPC_PROVIDER');
 
     this.provider = new ethers.JsonRpcProvider(BSC_RPC);
@@ -78,15 +74,9 @@ export class UniswapService {
     const addressTokenA = await pairContract.token0();
     const addressTokenB = await pairContract.token1();
 
-    const decimals0 = await this.getTokenDecimals(addressTokenA);
-    const decimals1 = await this.getTokenDecimals(addressTokenB);
-
-    const reserveTokenA = this.utils.convertBigIntToFloat(reserve0, decimals0);
-    const reserveTokenB = this.utils.convertBigIntToFloat(reserve1, decimals1);
-
     return [
-      { tokenAdrress: addressTokenA, reserves: reserveTokenA },
-      { tokenAdrress: addressTokenB, reserves: reserveTokenB },
+      { tokenAdrress: addressTokenA, reserves: reserve0 },
+      { tokenAdrress: addressTokenB, reserves: reserve1 },
     ];
   }
 
@@ -105,13 +95,14 @@ export class UniswapService {
     const [token0, token1] = await this.getTokensReserves(pairAddress);
 
     let price;
+    const scaleFactor = BigInt(10 ** 9);
 
     if (token0.tokenAdrress === addressTokenA) {
-      price = token1.reserves / token0.reserves;
+      price = (token1.reserves * scaleFactor) / token0.reserves;
     } else if (token0.tokenAdrress === addressTokenB) {
-      price = token0.reserves / token1.reserves;
+      price = (token0.reserves * scaleFactor) / token1.reserves;
     }
 
-    return { pairAddress, price };
+    return { pairAddress, price: Number(price) / Number(scaleFactor) };
   }
 }

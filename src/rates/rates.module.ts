@@ -3,9 +3,8 @@ import { RatesController } from './rates.controller';
 import { RatesService } from './services/rates.service';
 import { BinanceService } from './services/binance.service';
 import { UniswapService } from './services/uniswap.service';
-import { Utils } from 'src/utils/utils';
 import { DatabaseModule } from 'src/common/database.module';
-import { ratesModelsProviders } from './rates_models.providers';
+import { ratesModelsProviders } from 'src/common/database.models';
 
 @Module({
   imports: [DatabaseModule],
@@ -15,7 +14,6 @@ import { ratesModelsProviders } from './rates_models.providers';
     RatesService,
     BinanceService,
     UniswapService,
-    Utils,
   ],
 })
 export class RatesModule {}

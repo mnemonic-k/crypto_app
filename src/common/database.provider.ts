@@ -13,6 +13,7 @@ export const databaseProviders = [
 
       return await mongoose.connect(MONGODB_CONNECTION_URI);
     },
+
     inject: [ConfigService],
   },
 ];

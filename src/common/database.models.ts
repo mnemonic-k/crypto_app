@@ -1,6 +1,6 @@
 import { Mongoose } from 'mongoose';
-import { CryptoRateSchema } from './schemas/crypto_rate_schema';
-import { WhiteListSchema } from './schemas/whitelist_schema';
+import { CryptoRateSchema } from '../rates/schemas/crypto_rate_schema';
+import { WhiteListSchema } from '../rates/schemas/whitelist_schema';
 
 export const ratesModelsProviders = [
   {
